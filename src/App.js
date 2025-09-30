@@ -1,7 +1,7 @@
 import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login/Login';
-import Home from './pages/Home';
+import Home from './pages/Home/Home';
 import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
