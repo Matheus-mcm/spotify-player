@@ -25,7 +25,7 @@ function Login() {
     const name = e.target.name.value;
     const clientId = e.target["client-id"].value;
 
-    const redirectUri = window.location.origin + "/home";
+    const redirectUri = window.location.origin + "/";
     const scopes = [
       "user-read-currently-playing",
       "user-read-playback-state",
