@@ -9,25 +9,73 @@ function Login() {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash) {
-      console.log('hash', hash);
-      const params = new URLSearchParams(hash.replace("#", ""));
-      const token = params.get("access_token");
-      if (token) {
-        console.log('token', token);
-        localStorage.setItem("spotify_token", token);
-        window.history.replaceState({}, document.title, "/home"); // limpa a URL
-      }
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+
+    if (code) {
+      const clientId = localStorage.getItem("client_id");
+      const codeVerifier = localStorage.getItem("code_verifier");
+
+      const redirectUri = window.location.origin + "/";
+
+      const body = new URLSearchParams({
+        client_id: clientId,
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: redirectUri,
+        code_verifier: codeVerifier,
+      });
+
+      fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: body.toString(),
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("Access token:", data.access_token);
+          localStorage.setItem("spotify_token", data.access_token);
+          // Limpa a URL
+          window.history.replaceState({}, document.title, "/home");
+        })
+        .catch(err => {
+          console.error("Erro ao obter token:", err);
+        });
     }
   }, []);
 
-  const handleLogin = (e) => {
+
+  // Gera o code_verifier (128 caracteres seguros)
+  function generateCodeVerifier(length = 128) {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    let verifier = '';
+    for (let i = 0; i < length; i++) {
+      verifier += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return verifier;
+  }
+
+  // Gera o code_challenge baseado no code_verifier
+  async function generateCodeChallenge(codeVerifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  }
+
+  // 🚀 Atualização da sua função handleLogin
+  const handleLogin = async (e) => {
     e.preventDefault();
+
     const name = e.target.name.value;
     const clientId = e.target["client-id"].value;
 
-    const redirectUri = window.location.origin + "/";
+    const redirectUri = window.location.origin + "/"; // deve estar cadastrado no Spotify
     const scopes = [
       "user-read-currently-playing",
       "user-read-playback-state",
@@ -35,11 +83,27 @@ function Login() {
       "user-read-private"
     ];
 
-    const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&scope=${scopes.join("%20")}&response_type=token&show_dialog=true`;
+    // 🔑 Gerar code_verifier e code_challenge
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+    // Salvar no localStorage para usar depois no callback
+    localStorage.setItem("code_verifier", codeVerifier);
+    localStorage.setItem("client_id", clientId); // útil no callback também
+
+    // URL de autorização com PKCE
+    const authUrl = `https://accounts.spotify.com/authorize?` +
+      `client_id=${clientId}` +
+      `&response_type=code` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&scope=${scopes.join("%20")}` +
+      `&code_challenge_method=S256` +
+      `&code_challenge=${codeChallenge}` +
+      `&show_dialog=true`;
+
     window.location.href = authUrl;
   };
+
 
   return (
     <div className={`login-container theme-${theme}`}>
