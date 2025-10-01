@@ -1,4 +1,5 @@
 import Navbar from '../../components/Navbar/Navbar';
+import Dashboard from '../../components/Dashboard/Dashboard';
 import './Home.css';
 
 function Home() {
