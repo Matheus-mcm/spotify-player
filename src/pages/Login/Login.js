@@ -11,9 +11,11 @@ function Login() {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
+      console.log('hash', hash);
       const params = new URLSearchParams(hash.replace("#", ""));
       const token = params.get("access_token");
       if (token) {
+        console.log('token', token);
         localStorage.setItem("spotify_token", token);
         window.history.replaceState({}, document.title, "/home"); // limpa a URL
       }
