@@ -1,0 +1,34 @@
+.dashboard-container {
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+.current-track {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.current-track img {
+  width: 80px;
+  border-radius: 8px;
+}
+
+.queue-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.queue-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.queue-list img {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+}
