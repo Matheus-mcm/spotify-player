@@ -35,10 +35,8 @@ function Login() {
       })
         .then(res => res.json())
         .then(data => {
-          console.log("Access token:", data.access_token);
-          localStorage.setItem("spotify_token", data.access_token);
-          // Limpa a URL
-          window.history.replaceState({}, document.title, "/home");
+          signIn(data.access_token);
+          window.history.replaceState({}, document.title, "/");
         })
         .catch(err => {
           console.error("Erro ao obter token:", err);
@@ -46,8 +44,6 @@ function Login() {
     }
   }, []);
 
-
-  // Gera o code_verifier (128 caracteres seguros)
   function generateCodeVerifier(length = 128) {
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     let verifier = '';
@@ -57,7 +53,6 @@ function Login() {
     return verifier;
   }
 
-  // Gera o code_challenge baseado no code_verifier
   async function generateCodeChallenge(codeVerifier) {
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
@@ -68,14 +63,10 @@ function Login() {
       .replace(/=+$/, '');
   }
 
-  // 🚀 Atualização da sua função handleLogin
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    const name = e.target.name.value;
     const clientId = e.target["client-id"].value;
-
-    const redirectUri = window.location.origin + "/"; // deve estar cadastrado no Spotify
+    const redirectUri = window.location.origin + "/";
     const scopes = [
       "user-read-currently-playing",
       "user-read-playback-state",
@@ -83,15 +74,12 @@ function Login() {
       "user-read-private"
     ];
 
-    // 🔑 Gerar code_verifier e code_challenge
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-    // Salvar no localStorage para usar depois no callback
     localStorage.setItem("code_verifier", codeVerifier);
-    localStorage.setItem("client_id", clientId); // útil no callback também
+    localStorage.setItem("client_id", clientId);
 
-    // URL de autorização com PKCE
     const authUrl = `https://accounts.spotify.com/authorize?` +
       `client_id=${clientId}` +
       `&response_type=code` +
